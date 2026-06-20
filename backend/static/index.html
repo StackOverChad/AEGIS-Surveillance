@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Interactive Planning Simulator and Real-Time Dashboard for the Smart Home Spatiotemporal Surveillance System. Monitor local streams, tweak hardware pipelines, and view emergency logs.">
+    <title>Aegis - Smart Home Spatiotemporal Surveillance System</title>
+    
+    <!-- Premium Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js for live metrics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom Stylesheet -->
+    <link rel="stylesheet" href="static/style.css">
+</head>
+<body>
+    <div class="glass-bg-glow"></div>
+    <div class="app-container">
+        <!-- Main Header -->
+        <header class="app-header">
+            <div class="header-logo">
+                <div class="logo-icon-container">
+                    <i class="fa-solid fa-shield-halved logo-icon"></i>
+                    <span class="logo-pulse"></span>
+                </div>
+                <div class="logo-text">
+                    <h1>AEGIS SURVEILLANCE</h1>
+                    <p>Spatiotemporal Edge Inference Pipeline</p>
+                </div>
+            </div>
+            
+            <div class="system-status-container">
+                <div class="status-indicator">
+                    <span class="status-dot pulsing"></span>
+                    <span id="system-status-text">Pipeline Active</span>
+                </div>
+                <div class="api-key-badge">
+                    <i class="fa-solid fa-microchip"></i>
+                    <span id="model-mode-badge">SlowFast CPU</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Dashboard Grid -->
+        <main class="dashboard-grid">
+            
+            <!-- Left Panel: Live Stream Viewport -->
+            <section class="dashboard-card stream-panel" id="stream-card">
+                <div class="card-header">
+                    <h2><i class="fa-solid fa-video card-icon"></i>Live Camera Feed</h2>
+                </div>
+                
+                <div class="stream-viewport-container">
+                    <!-- Serving live MJPEG Stream from FastAPI backend -->
+                    <img id="live-stream-feed" src="/api/stream" alt="Live Surveillance Stream" class="stream-img">
+                    <div class="stream-overlay-badge" id="anomaly-overlay-badge">
+                        <i class="fa-solid fa-circle-check"></i> <span id="anomaly-badge-text">STATUS: SAFE</span>
+                    </div>
+                    <div id="loading-overlay" class="loading-overlay hidden">
+                        <div class="spinner"></div>
+                        <p>Connecting to Video Stream...</p>
+                    </div>
+                </div>
+
+                <div class="stream-source-settings">
+                    <div class="source-select-row">
+                        <span class="control-label">Video Input Source</span>
+                        <select id="stream-source-select" class="custom-select" aria-label="Stream Source Select">
+                            <option value="synthetic">Synthetic Cam (Local Simulator)</option>
+                            <option value="webcam">Webcam (Direct Local Input)</option>
+                            <option value="rtsp">CCTV RTSP Network Stream</option>
+                        </select>
+                    </div>
+                    
+                    <div id="rtsp-input-container" class="rtsp-input-row hidden">
+                        <input type="text" id="rtsp-url-input" class="custom-input" placeholder="rtsp://admin:password@192.168.1.100:554/stream1" aria-label="CCTV RTSP URL">
+                        <button id="rtsp-apply-btn" class="btn btn-primary-glow"><i class="fa-solid fa-plug"></i> Connect</button>
+                    </div>
+                </div>
+                
+                <div class="stream-footer-stats">
+                    <div class="stat-pill">
+                        <span class="pill-label">Resolution</span>
+                        <span id="stream-stat-resolution" class="pill-value">112 × 112</span>
+                    </div>
+                    <div class="stat-pill">
+                        <span class="pill-label">Pipeline FPS</span>
+                        <span id="stream-stat-fps" class="pill-value">2.0 FPS</span>
+                    </div>
+                    <div class="stat-pill">
+                        <span class="pill-label">Source</span>
+                        <span id="stream-stat-source" class="pill-value">Synthetic</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Middle Panel: Pipeline Simulator -->
+            <section class="dashboard-card simulator-panel" id="simulator-card">
+                <div class="card-header">
+                    <h2><i class="fa-solid fa-sliders card-icon"></i>Pipeline Simulator</h2>
+                    <button id="trigger-anomaly-btn" class="btn btn-danger-glow" title="Simulates a temporary high-activity intrusion">
+                        <i class="fa-solid fa-burst"></i> Inject Intrusion
+                    </button>
+                </div>
+                
+                <div class="simulator-controls">
+                    <div class="control-group">
+                        <div class="control-label-row">
+                            <label for="resolution-range">Downsample Resolution</label>
+                            <span class="control-val" id="val-resolution">112 px</span>
+                        </div>
+                        <input type="range" id="resolution-range" min="112" max="448" step="112" value="112" class="neon-slider" aria-valuemin="112" aria-valuemax="448" aria-valuenow="112">
+                        <div class="slider-ticks">
+                            <span>112px</span>
+                            <span>224px</span>
+                            <span>336px</span>
+                            <span>448px</span>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <div class="control-label-row">
+                            <label for="fps-range">Streaming Stream Rate</label>
+                            <span class="control-val" id="val-fps">30 FPS</span>
+                        </div>
+                        <input type="range" id="fps-range" min="10" max="60" step="5" value="30" class="neon-slider" aria-valuemin="10" aria-valuemax="60" aria-valuenow="30">
+                        <div class="slider-ticks">
+                            <span>10 FPS</span>
+                            <span>30 FPS</span>
+                            <span>60 FPS</span>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <div class="control-label-row">
+                            <label for="interval-range">Inference Wake-up Interval</label>
+                            <span class="control-val" id="val-interval">500 ms</span>
+                        </div>
+                        <input type="range" id="interval-range" min="200" max="2000" step="100" value="500" class="neon-slider" aria-valuemin="200" aria-valuemax="2000" aria-valuenow="500">
+                        <div class="slider-ticks">
+                            <span>200ms (5 FPS)</span>
+                            <span>1000ms (1 FPS)</span>
+                            <span>2000ms (0.5 FPS)</span>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <div class="control-label-row">
+                            <label for="threshold-range">Anomaly Alert Threshold</label>
+                            <span class="control-val" id="val-threshold">0.85</span>
+                        </div>
+                        <input type="range" id="threshold-range" min="0.50" max="0.99" step="0.01" value="0.85" class="neon-slider" aria-valuemin="0.5" aria-valuemax="0.99" aria-valuenow="0.85">
+                        <div class="slider-ticks">
+                            <span>0.50</span>
+                            <span>0.85 (Rec.)</span>
+                            <span>0.99</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Simulation Output Metrics -->
+                <div class="simulation-metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-icon"><i class="fa-solid fa-cpu"></i></div>
+                        <div class="metric-data">
+                            <span class="metric-title">Simulated CPU Load</span>
+                            <span id="metric-cpu" class="metric-value">12.5%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-icon"><i class="fa-solid fa-memory"></i></div>
+                        <div class="metric-data">
+                            <span class="metric-title">Memory Footprint</span>
+                            <span id="metric-memory" class="metric-value">450 MB</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-icon"><i class="fa-solid fa-stopwatch"></i></div>
+                        <div class="metric-data">
+                            <span class="metric-title">Alert Latency</span>
+                            <span id="metric-latency" class="metric-value">150 ms</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        <div class="metric-data">
+                            <span class="metric-title">Dropped Frames</span>
+                            <span id="metric-dropped" class="metric-value">0 %</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Panel: Real-Time Anomaly Probability Timeline -->
+            <section class="dashboard-card chart-panel" id="chart-card">
+                <div class="card-header">
+                    <h2><i class="fa-solid fa-chart-line card-icon"></i>Real-Time Anomaly Monitor</h2>
+                    <div class="live-pulse-container">
+                        <span class="chart-pulse"></span> LIVE MONITOR
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="anomalyChart"></canvas>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Bottom Panel: Alert Timeline & Logs -->
+        <section class="dashboard-card alerts-panel" id="alerts-card">
+            <div class="card-header">
+                <h2><i class="fa-solid fa-bell card-icon"></i>Triggered Security Alerts</h2>
+                <button id="clear-alerts-btn" class="btn btn-secondary">
+                    <i class="fa-solid fa-trash-can"></i> Clear Logs
+                </button>
+            </div>
+            
+            <div class="alerts-list-wrapper">
+                <table class="alerts-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Anomaly Score</th>
+                            <th>LLM Decision Summary & Emergency Action Script</th>
+                            <th>Status</th>
+                            <th>Video Clip</th>
+                        </tr>
+                    </thead>
+                    <tbody id="alerts-tbody">
+                        <tr>
+                            <td colspan="5" class="no-alerts-placeholder">
+                                <i class="fa-solid fa-circle-info"></i> No anomalies detected yet. System secure.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <!-- Modal for Video Clip Replay -->
+    <div id="video-modal" class="modal-overlay hidden">
+        <div class="modal-content glassmorphism">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-circle-play"></i> Captured Anomaly Clip</h3>
+                <button id="close-modal-btn" class="close-btn" aria-label="Close Modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <img id="modal-video-player" src="" alt="Captured Anomaly Video" class="modal-video">
+            </div>
+            <div class="modal-footer">
+                <p id="modal-alert-summary">Alert Details Summary</p>
+            </div>
+        </div>
+    </div>
+    
+    <script src="static/app.js"></script>
+</body>
+</html>
